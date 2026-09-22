@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo 목록</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --done: #16a34a;
+      --error: #dc2626;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111318;
+        --card: #1b1e26;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #2b2f3a;
+        --accent: #60a5fa;
+        --done: #4ade80;
+        --error: #f87171;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 22px; margin: 0; }
+    .meta { color: var(--muted); font-size: 13px; }
+    button {
+      font: inherit;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    ul#list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    li.item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .check {
+      width: 22px; height: 22px; margin-top: 2px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #fff;
+    }
+    .check.done { background: var(--done); border-color: var(--done); }
+    .check.none { border-style: dashed; }
+    .title { font-size: 16px; font-weight: 600; word-break: break-word; }
+    .title.done { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+    .fields {
+      margin-top: 6px;
+      display: flex; flex-wrap: wrap; gap: 6px 14px;
+      font-size: 13px; color: var(--muted);
+    }
+    .fields span b { color: var(--text); font-weight: 500; }
+
+    .status {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+    .status.error { color: var(--error); border-color: var(--error); border-style: solid; }
+    .status pre {
+      text-align: left; white-space: pre-wrap; word-break: break-all;
+      font-size: 12px; margin: 12px 0 0; opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>test_todos</h1>
+        <div class="meta" id="meta">불러오는 중…</div>
+      </div>
+      <button id="refresh" type="button">새로고침</button>
+    </header>
+
+    <ul id="list"></ul>
+    <div id="status" class="status">불러오는 중…</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://rtpjjdraobpkymydffzb.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "sb_publishable_Rn_McNBXz7pJZwI0udv2-Q_l89TFgvU";
+    const TABLE = "test_todos";
+
+    // 제목으로 쓸 후보 컬럼과 완료 여부로 쓸 후보 컬럼 (앞에 있을수록 우선)
+    const TITLE_KEYS = ["title", "task", "name", "todo", "content", "text", "description"];
+    const DONE_KEYS = ["is_complete", "is_completed", "completed", "done", "is_done", "checked"];
+    const HIDDEN_KEYS = ["id", "user_id"];
+
+    const listEl = document.getElementById("list");
+    const statusEl = document.getElementById("status");
+    const metaEl = document.getElementById("meta");
+    const refreshBtn = document.getElementById("refresh");
+
+    function pickKey(row, candidates) {
+      return candidates.find((k) => Object.prototype.hasOwnProperty.call(row, k)) ?? null;
+    }
+
+    function formatValue(v) {
+      if (v === null || v === undefined) return "—";
+      if (typeof v === "boolean") return v ? "예" : "아니오";
+      if (typeof v === "object") return JSON.stringify(v);
+      const s = String(v);
+      // ISO 날짜 문자열이면 보기 좋게 변환
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) {
+        const d = new Date(s);
+        if (!isNaN(d)) return d.toLocaleString("ko-KR");
+      }
+      return s;
+    }
+
+    function renderRows(rows) {
+      listEl.innerHTML = "";
+      if (rows.length === 0) {
+        statusEl.className = "status";
+        statusEl.textContent = "표에 데이터가 없습니다.";
+        statusEl.hidden = false;
+        return;
+      }
+      statusEl.hidden = true;
+
+      const titleKey = pickKey(rows[0], TITLE_KEYS);
+      const doneKey = pickKey(rows[0], DONE_KEYS);
+
+      for (const row of rows) {
+        const li = document.createElement("li");
+        li.className = "item";
+
+        const isDone = doneKey ? Boolean(row[doneKey]) : null;
+        const check = document.createElement("div");
+        check.className = "check " + (isDone === null ? "none" : isDone ? "done" : "");
+        check.textContent = isDone ? "✓" : "";
+        li.appendChild(check);
+
+        const body = document.createElement("div");
+
+        const title = document.createElement("div");
+        title.className = "title" + (isDone ? " done" : "");
+        title.textContent = titleKey
+          ? formatValue(row[titleKey])
+          : (row.id !== undefined ? `#${row.id}` : "(제목 없음)");
+        body.appendChild(title);
+
+        const fields = document.createElement("div");
+        fields.className = "fields";
+        for (const [k, v] of Object.entries(row)) {
+          if (k === titleKey || k === doneKey || HIDDEN_KEYS.includes(k)) continue;
+          const span = document.createElement("span");
+          const b = document.createElement("b");
+          b.textContent = k + ": ";
+          span.appendChild(b);
+          span.appendChild(document.createTextNode(formatValue(v)));
+          fields.appendChild(span);
+        }
+        if (row.id !== undefined) {
+          const span = document.createElement("span");
+          span.textContent = `id: ${row.id}`;
+          fields.appendChild(span);
+        }
+        if (fields.childElementCount > 0) body.appendChild(fields);
+
+        li.appendChild(body);
+        listEl.appendChild(li);
+      }
+    }
+
+    async function loadTodos() {
+      refreshBtn.disabled = true;
+      statusEl.className = "status";
+      statusEl.textContent = "불러오는 중…";
+      statusEl.hidden = false;
+      metaEl.textContent = "불러오는 중…";
+
+      try {
+        const url = `${SUPABASE_URL}${TABLE}?select=*&order=id.asc`;
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            Accept: "application/json",
+          },
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}\n${text}`);
+        }
+        const rows = await res.json();
+        renderRows(rows);
+        metaEl.textContent = `총 ${rows.length}건 · ${new Date().toLocaleTimeString("ko-KR")} 기준`;
+      } catch (err) {
+        listEl.innerHTML = "";
+        statusEl.className = "status error";
+        statusEl.textContent = "데이터를 불러오지 못했습니다.";
+        const pre = document.createElement("pre");
+        pre.textContent = err.message;
+        statusEl.appendChild(pre);
+        statusEl.hidden = false;
+        metaEl.textContent = "오류";
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    refreshBtn.addEventListener("click", loadTodos);
+    loadTodos();
+  </script>
+</body>
+</html>

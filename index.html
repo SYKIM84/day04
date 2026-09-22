@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>day04</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111318;
+        --card: #1b1e26;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #2b2f3a;
+        --accent: #60a5fa;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    li a {
+      display: block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: inherit;
+      text-decoration: none;
+    }
+    li a:hover { border-color: var(--accent); }
+    li a strong { display: block; font-size: 16px; }
+    li a span { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>day04</h1>
+    <div class="meta">페이지 목록</div>
+    <ul>
+      <li>
+        <a href="preview.html">
+          <strong>Todo 목록 (preview.html)</strong>
+          <span>Supabase test_todos 표의 데이터를 불러와 목록으로 보여줍니다.</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</body>
+</html>
