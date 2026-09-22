@@ -4,60 +4,104 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>day04</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f6f7f9;
-      --card: #ffffff;
-      --text: #1f2933;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --accent: #2563eb;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #111318;
-        --card: #1b1e26;
-        --text: #e5e7eb;
-        --muted: #9ca3af;
-        --border: #2b2f3a;
-        --accent: #60a5fa;
-      }
+      --navy-900: #0E1729;
+      --navy-800: #16233D;
+      --navy-700: #1E2F52;
+      --line: rgba(156, 199, 255, 0.16);
+      --line-strong: rgba(156, 199, 255, 0.34);
+      --text: #E6ECF7;
+      --muted: #93A4C4;
+      --accent: #9CC7FF;
     }
     * { box-sizing: border-box; }
+    html { background: var(--navy-900); }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", Roboto, sans-serif;
-      background: var(--bg);
+      font-family: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
       color: var(--text);
-      line-height: 1.5;
+      background:
+        radial-gradient(900px 420px at 50% -120px, rgba(156, 199, 255, 0.10), transparent 70%),
+        var(--navy-900);
+      min-height: 100vh;
     }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
-    h1 { font-size: 22px; margin: 0 0 4px; }
-    .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-    li a {
-      display: block;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 16px 96px;
+    }
+    .top { color: var(--muted); font-size: 14px; }
+
+    h1 {
+      margin: 24px 0 36px;
+      font-size: 34px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      max-width: 18em;
+      word-break: keep-all;
+    }
+
+    ul.pages {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid var(--line-strong);
+    }
+    ul.pages li { border-bottom: 1px solid var(--line); }
+    ul.pages a {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      gap: 16px;
+      padding: 22px 0;
       color: inherit;
       text-decoration: none;
     }
-    li a:hover { border-color: var(--accent); }
-    li a strong { display: block; font-size: 16px; }
-    li a span { color: var(--muted); font-size: 13px; }
+    ul.pages a:hover .name { color: var(--accent); }
+    .name {
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .desc {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14.5px;
+      max-width: 34em;
+    }
+    .file {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 480px) {
+      .wrap { padding-top: 32px; }
+      h1 { font-size: 27px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>day04</h1>
-    <div class="meta">페이지 목록</div>
-    <ul>
+    <div class="top">day04</div>
+    <h1>Supabase 연습 프로젝트의 페이지 모음입니다.</h1>
+
+    <ul class="pages">
       <li>
         <a href="preview.html">
-          <strong>Todo 목록 (preview.html)</strong>
-          <span>Supabase test_todos 표의 데이터를 불러와 목록으로 보여줍니다.</span>
+          <span class="name">할 일 목록</span>
+          <span class="file">preview.html</span>
+          <span class="desc">Supabase의 test_todos 표에서 할 일을 불러와 완료 여부, 마감일, 수량과 함께 보여줍니다.</span>
         </a>
       </li>
     </ul>
